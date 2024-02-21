@@ -33,11 +33,10 @@ import (
 	"github.com/aquasecurity/aqua-operator/pkg/utils/extra"
 	version2 "github.com/aquasecurity/aqua-operator/pkg/version"
 	routev1 "github.com/openshift/api/route/v1"
+	"os"
+
 	uzap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -51,7 +50,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	aquasecurityv1alpha1 "github.com/aquasecurity/aqua-operator/apis/aquasecurity/v1alpha1"
 	operatorv1alpha1 "github.com/aquasecurity/aqua-operator/apis/operator/v1alpha1"
@@ -109,22 +107,15 @@ func main() {
 	)
 	printVersion()
 
-	ws := webhook.NewServer(webhook.Options{
-		Port: 9443,
-	})
-
 	watchNamespace := extra.GetCurrentNameSpace()
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme: scheme,
-		Metrics: metricsserver.Options{
-			BindAddress: metricsAddr},
-		WebhookServer:          ws,
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "aqua-operator-lock",
-		Cache: cache.Options{DefaultNamespaces: map[string]cache.Config{
-			watchNamespace: {},
-		}},
+		Namespace:              watchNamespace,
 	})
 
 	if err != nil {
