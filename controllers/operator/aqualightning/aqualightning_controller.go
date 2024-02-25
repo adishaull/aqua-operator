@@ -70,7 +70,7 @@ func (r *AquaLightningReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	reqLogger := log.WithValues("Request.Namespace", req.Namespace, "Request.Name", req.Name)
 	reqLogger.Info("Reconciling AquaLightning")
 
-	// Fetch the AquaCsp instance
+	// Fetch the AquaLightning instance
 	instance := &v1alpha1.AquaLightning{}
 	err := r.Client.Get(context.TODO(), req.NamespacedName, instance)
 	if err != nil {
@@ -99,8 +99,7 @@ func (r *AquaLightningReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	waitForEnforcer := true
 	waitForKubeEnforcer := true
 
-	if !reflect.DeepEqual(v1alpha1.AquaDeploymentUpdateInProgress, instance.Status.State) &&
-		(waitForKubeEnforcer || waitForEnforcer) {
+	if !reflect.DeepEqual(v1alpha1.AquaDeploymentUpdateInProgress, instance.Status.State) && (waitForKubeEnforcer || waitForEnforcer) {
 		crStatus := r.WaitForEnforcersReady(instance, waitForEnforcer, waitForKubeEnforcer)
 		if !reflect.DeepEqual(instance.Status.State, crStatus) {
 			instance.Status.State = crStatus
@@ -158,24 +157,24 @@ func (r *AquaLightningReconciler) updateLightningObject(cr *v1alpha1.AquaLightni
 }
 
 func (r *AquaLightningReconciler) InstallAquaKubeEnforcer(cr *v1alpha1.AquaLightning) (reconcile.Result, error) {
-	reqLogger := log.WithValues("CSP - AquaKubeEnforcer Phase", "Install Aqua Enforcer")
+	reqLogger := log.WithValues("Lightning - AquaKubeEnforcer Phase", "Install Aqua Enforcer")
 	reqLogger.Info("Start installing AquaKubeEnforcer")
 
 	// Define a new AquaEnforcer object
 	lightningHelper := newAquaLightningHelper(cr)
-	enforcer := lightningHelper.newAquaKubeEnforcer(cr)
+	kubeEnforcer := lightningHelper.newAquaKubeEnforcer(cr)
 
-	// Set AquaCsp instance as the owner and controller
-	if err := controllerutil.SetControllerReference(cr, enforcer, r.Scheme); err != nil {
+	// Set AquaLightning instance as the owner and controller
+	if err := controllerutil.SetControllerReference(cr, kubeEnforcer, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Check if this AquaKubeEnforcer already exists
 	found := &v1alpha1.AquaKubeEnforcer{}
-	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: enforcer.Name, Namespace: enforcer.Namespace}, found)
+	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: kubeEnforcer.Name, Namespace: kubeEnforcer.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a New Aqua KubeEnforcer", "AquaKubeEnforcer.Namespace", enforcer.Namespace, "AquaKubeEnforcer.Name", enforcer.Name)
-		err = r.Client.Create(context.TODO(), enforcer)
+		reqLogger.Info("Creating a New Aqua KubeEnforcer", "AquaKubeEnforcer.Namespace", kubeEnforcer.Namespace, "AquaKubeEnforcer.Name", kubeEnforcer.Name)
+		err = r.Client.Create(context.TODO(), kubeEnforcer)
 		if err != nil {
 			return reconcile.Result{Requeue: true, RequeueAfter: time.Duration(0)}, err
 		}
@@ -187,14 +186,15 @@ func (r *AquaLightningReconciler) InstallAquaKubeEnforcer(cr *v1alpha1.AquaLight
 	// AquaEnforcer already exists - don't requeue
 
 	if found != nil {
-		update := !reflect.DeepEqual(enforcer.Spec, found.Spec)
+		update := !reflect.DeepEqual(kubeEnforcer.Spec, found.Spec)
 
-		reqLogger.Info("Checking for AquaKubeEnforcer Upgrade", "kube-enforcer", enforcer.Spec, "found", found.Spec, "update bool", update)
+		reqLogger.Info("Checking for AquaKubeEnforcer Upgrade", "kube-enforcer", kubeEnforcer.Spec, "found", found.Spec, "update bool", update)
 		if update {
-			found.Spec = *(enforcer.Spec.DeepCopy())
+			reqLogger.Info("Updating AquaKubeEnforcer")
+			found.Spec = *(kubeEnforcer.Spec.DeepCopy())
 			err = r.Client.Update(context.Background(), found)
 			if err != nil {
-				reqLogger.Error(err, "Aqua CSP: Failed to update AquaKubeEnforcer.", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+				reqLogger.Error(err, "Aqua Lightning: Failed to update AquaKubeEnforcer.", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 				return reconcile.Result{}, err
 			}
 			// Spec updated - return and requeue
@@ -215,7 +215,7 @@ func (r *AquaLightningReconciler) InstallAquaEnforcer(cr *v1alpha1.AquaLightning
 	lightningHelper := newAquaLightningHelper(cr)
 	enforcer := lightningHelper.newAquaEnforcer(cr)
 
-	// Set AquaCsp instance as the owner and controller
+	// Set AquaLightning instance as the owner and controller
 	if err := controllerutil.SetControllerReference(cr, enforcer, r.Scheme); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -244,7 +244,7 @@ func (r *AquaLightningReconciler) InstallAquaEnforcer(cr *v1alpha1.AquaLightning
 			found.Spec = *(enforcer.Spec.DeepCopy())
 			err = r.Client.Update(context.Background(), found)
 			if err != nil {
-				reqLogger.Error(err, "Aqua CSP: Failed to update AquaEnforcer.", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
+				reqLogger.Error(err, "Aqua Lightning: Failed to update AquaEnforcer.", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 				return reconcile.Result{}, err
 			}
 			// Spec updated - return and requeue
@@ -257,7 +257,7 @@ func (r *AquaLightningReconciler) InstallAquaEnforcer(cr *v1alpha1.AquaLightning
 }
 
 func (r *AquaLightningReconciler) WaitForEnforcersReady(cr *v1alpha1.AquaLightning, validateEnforcer, validateKubeEnforcer bool) v1alpha1.AquaDeploymentState {
-	reqLogger := log.WithValues("CSP - AquaEnforcers Phase", "Wait For Aqua Enforcer and KubeEnforcer")
+	reqLogger := log.WithValues("Lightning - AquaEnforcers Phase", "Wait For Aqua Enforcer and KubeEnforcer")
 	reqLogger.Info("Start waiting to aqua enforcer and kube-enforcer")
 
 	enforcerStatus := v1alpha1.AquaDeploymentStateRunning
@@ -288,24 +288,13 @@ func (r *AquaLightningReconciler) WaitForEnforcersReady(cr *v1alpha1.AquaLightni
 
 	returnStatus := v1alpha1.AquaDeploymentStateRunning
 
-	if reflect.DeepEqual(v1alpha1.AquaDeploymentStatePending, enforcerStatus) ||
-		reflect.DeepEqual(v1alpha1.AquaDeploymentStatePending, kubeEnforcerStatus) {
+	if reflect.DeepEqual(v1alpha1.AquaDeploymentStatePending, enforcerStatus) || reflect.DeepEqual(v1alpha1.AquaDeploymentStatePending, kubeEnforcerStatus) {
 		returnStatus = v1alpha1.AquaEnforcerWaiting
-	} else if reflect.DeepEqual(v1alpha1.AquaEnforcerUpdateInProgress, enforcerStatus) ||
-		reflect.DeepEqual(v1alpha1.AquaEnforcerUpdateInProgress, kubeEnforcerStatus) {
+	} else if reflect.DeepEqual(v1alpha1.AquaEnforcerUpdateInProgress, enforcerStatus) || reflect.DeepEqual(v1alpha1.AquaEnforcerUpdateInProgress, kubeEnforcerStatus) {
 		returnStatus = v1alpha1.AquaEnforcerUpdateInProgress
-	} else if reflect.DeepEqual(v1alpha1.AquaEnforcerUpdatePendingApproval, enforcerStatus) ||
-		reflect.DeepEqual(v1alpha1.AquaEnforcerUpdatePendingApproval, kubeEnforcerStatus) {
+	} else if reflect.DeepEqual(v1alpha1.AquaEnforcerUpdatePendingApproval, enforcerStatus) || reflect.DeepEqual(v1alpha1.AquaEnforcerUpdatePendingApproval, kubeEnforcerStatus) {
 		returnStatus = v1alpha1.AquaEnforcerUpdatePendingApproval
 	}
-
-	//if reflect.DeepEqual(v1alpha1.AquaDeploymentStatePending, kubeEnforcerStatus) {
-	//	returnStatus = v1alpha1.AquaEnforcerWaiting
-	//} else if reflect.DeepEqual(v1alpha1.AquaEnforcerUpdateInProgress, kubeEnforcerStatus) {
-	//	returnStatus = v1alpha1.AquaEnforcerUpdateInProgress
-	//} else if reflect.DeepEqual(v1alpha1.AquaEnforcerUpdatePendingApproval, kubeEnforcerStatus) {
-	//	returnStatus = v1alpha1.AquaEnforcerUpdatePendingApproval
-	//}
 
 	return returnStatus
 }

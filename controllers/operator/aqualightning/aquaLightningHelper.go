@@ -192,6 +192,15 @@ func (lightning *AquaLightningHelper) newAquaEnforcer(cr *v1alpha1.AquaLightning
 			EnforcerUpdateApproved: cr.Spec.Enforcer.EnforcerUpdateApproved,
 		},
 	}
+
+	// Check if Mtls is enabled for enforcer
+	if cr.Spec.Enforcer.Mtls {
+		aquaenf.Spec.Secret = &v1alpha1.AquaSecret{
+			Name: cr.Spec.Enforcer.Secret.Name,
+			Key:  cr.Spec.Enforcer.Secret.Key,
+		}
+	}
+
 	return aquaenf
 }
 

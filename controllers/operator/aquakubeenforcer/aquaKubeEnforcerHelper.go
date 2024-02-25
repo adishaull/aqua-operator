@@ -972,8 +972,46 @@ func (ebf *AquaKubeEnforcerHelper) getEnvVars(cr *operatorv1alpha1.AquaKubeEnfor
 // Starboard functions
 
 func (ebf *AquaKubeEnforcerHelper) newStarboard(cr *operatorv1alpha1.AquaKubeEnforcer) *v1alpha1.AquaStarboard {
+	log.Info("-------------------------------------------")
+	log.Info("[newStarboard] Starting newStarboard")
+	log.Info("-------------------------------------------")
+	log.Info(fmt.Sprintf("[newStarboard] Infrastructure.Version: %v", cr.Spec.Infrastructure.Version))
+	log.Info(fmt.Sprintf("[newStarboard] KubeEnforcerService.ImageData: %v", cr.Spec.KubeEnforcerService.ImageData))
+	log.Info(fmt.Sprintf("[newStarboard] cr.Spec.AllowAnyVersion: %v", cr.Spec.AllowAnyVersion))
 
-	_, registry, repository, tag := extra.GetImageData("kube-enforcer", cr.Spec.Infrastructure.Version, cr.Spec.KubeEnforcerService.ImageData, cr.Spec.AllowAnyVersion)
+	log.Info("-------------------------------------------")
+
+	log.Info(fmt.Sprintf("[newStarboard] Infrastructure: %v", cr.Spec.DeployStarboard.Infrastructure))
+	log.Info(fmt.Sprintf("[newStarboard] AllowAnyVersion: %v", cr.Spec.DeployStarboard.AllowAnyVersion))
+	log.Info(fmt.Sprintf("[newStarboard] StarboardService: %v", cr.Spec.DeployStarboard.StarboardService))
+	log.Info(fmt.Sprintf("[newStarboard] Config: %v", cr.Spec.DeployStarboard.Config))
+	log.Info(fmt.Sprintf("[newStarboard] RegistryData: %v", cr.Spec.DeployStarboard.RegistryData))
+	log.Info(fmt.Sprintf("[newStarboard] ImageData: %v", cr.Spec.DeployStarboard.ImageData))
+	log.Info(fmt.Sprintf("[newStarboard] Envs: %v", cr.Spec.DeployStarboard.Envs))
+	log.Info(fmt.Sprintf("[newStarboard] LogDevMode: %v", cr.Spec.DeployStarboard.LogDevMode))
+	log.Info(fmt.Sprintf("[newStarboard] ConcurrentScanJobsLimit: %v", cr.Spec.DeployStarboard.ConcurrentScanJobsLimit))
+	log.Info(fmt.Sprintf("[newStarboard] ScanJobRetryAfter: %v", cr.Spec.DeployStarboard.ScanJobRetryAfter))
+	log.Info(fmt.Sprintf("[newStarboard] MetricsBindAddress: %v", cr.Spec.DeployStarboard.MetricsBindAddress))
+	log.Info(fmt.Sprintf("[newStarboard] HealthProbeBindAddress: %v", cr.Spec.DeployStarboard.HealthProbeBindAddress))
+	log.Info(fmt.Sprintf("[newStarboard] CisKubernetesBenchmarkEnabled: %v", cr.Spec.DeployStarboard.CisKubernetesBenchmarkEnabled))
+	log.Info(fmt.Sprintf("[newStarboard] VulnerabilityScannerEnabled: %v", cr.Spec.DeployStarboard.VulnerabilityScannerEnabled))
+	log.Info(fmt.Sprintf("[newStarboard] BatchDeleteLimit: %v", cr.Spec.DeployStarboard.BatchDeleteLimit))
+	log.Info(fmt.Sprintf("[newStarboard] BatchDeleteDelay: %v", cr.Spec.DeployStarboard.BatchDeleteDelay))
+	log.Info("-------------------------------------------")
+
+	_, registry, repository, tag, err := extra.GetImageDataStarbaord("kube-enforcer", cr.Spec.Infrastructure.Version, cr.Spec.KubeEnforcerService.ImageData, cr.Spec.AllowAnyVersion)
+	if err != nil {
+		// Handle the error
+		// For example, you can log the error and return or do other error handling logic
+		log.Error(err, "Failed to get image data for Starboard")
+		// Return or handle the error appropriately
+	}
+	log.Info(fmt.Sprintf("[newStarboard] registry: %s", registry))
+	log.Info(fmt.Sprintf("[newStarboard] repository: %s", repository))
+	log.Info(fmt.Sprintf("[newStarboard] tag: %s", tag))
+
+	//// Log the value of cr to ensure it's not nil
+	//log.Info(fmt.Sprintf("cr: %+v", cr))
 
 	labels := map[string]string{
 		"app":                cr.Name + "-kube-enforcer",
@@ -1015,5 +1053,6 @@ func (ebf *AquaKubeEnforcerHelper) newStarboard(cr *operatorv1alpha1.AquaKubeEnf
 			BatchDeleteDelay:              cr.Spec.DeployStarboard.BatchDeleteDelay,
 		},
 	}
+	log.Info("Successfully created newStarboard")
 	return aquasb
 }

@@ -95,6 +95,61 @@ func GetImageData(repo string, version string, imageData *operatorv1alpha1.AquaI
 	return pullPolicy, registry, repository, tag
 }
 
+func GetImageDataStarbaord(repo string, version string, imageData *operatorv1alpha1.AquaImage, allowAnyVersion bool) (string, string, string, string, error) {
+	log := logf.Log.WithName("GetImageData")
+	log.Info(fmt.Sprintf("repo: %s", repo))
+	log.Info(fmt.Sprintf("version: %s", version))
+	log.Info(fmt.Sprintf("imageData: %s", imageData))
+
+	pullPolicy := consts.PullPolicy
+	repository := repo
+	tag := version
+	registry := consts.Registry
+
+	if repo == "starboard-operator" {
+		registry = consts.StarboardRegistry
+	}
+	if len(tag) == 0 {
+		if repo == "starboard-operator" {
+			log.Info(fmt.Sprintf("Setting latest tag version %s", consts.StarboardVersion))
+			tag = consts.StarboardVersion
+		} else {
+			log.Info(fmt.Sprintf("Setting latest tag version %s", consts.LatestVersion))
+			tag = consts.LatestVersion
+		}
+	}
+
+	// Check for errors
+	if imageData != nil {
+		if len(imageData.PullPolicy) != 0 {
+			pullPolicy = imageData.PullPolicy
+		}
+
+		if len(imageData.Repository) != 0 {
+			log.Info(fmt.Sprintf("Setting repo %s", imageData.Repository))
+			repository = imageData.Repository
+		}
+
+		if len(imageData.Tag) != 0 {
+			tag = imageData.Tag
+		}
+
+		if len(imageData.Registry) != 0 {
+			log.Info(fmt.Sprintf("Setting registry %s", imageData.Registry))
+			registry = imageData.Registry
+		}
+	}
+
+	if checkForUpgrade(tag) && !allowAnyVersion {
+		tag = consts.LatestVersion
+	}
+
+	log.Info(fmt.Sprintf("pullPolicy: %s, registry: %s, repository: %s tag: %s", pullPolicy, registry, repository, tag))
+
+	// Return the values and a potential error
+	return pullPolicy, registry, repository, tag, nil
+}
+
 func IsMarketPlace() bool {
 	item := os.Getenv("CERTIFIED_MARKETPLACE")
 

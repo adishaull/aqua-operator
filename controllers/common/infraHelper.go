@@ -35,6 +35,7 @@ func UpdateAquaInfrastructureFull(infra *operatorv1alpha1.AquaInfrastructure, na
 			} else {
 				infra.Version = consts.LatestVersion
 			}
+			fmt.Sprintf("[UpdateAquaInfrastructureFull] starboard Infrastructure.Version: %v", infra.Version)
 		}
 
 		if len(infra.Platform) == 0 {
@@ -46,6 +47,7 @@ func UpdateAquaInfrastructureFull(infra *operatorv1alpha1.AquaInfrastructure, na
 			}
 		}
 	} else {
+		fmt.Sprintf("[UpdateAquaInfrastructureFull] Infrastructure is nill")
 		infra = &operatorv1alpha1.AquaInfrastructure{
 			ServiceAccount: fmt.Sprintf(consts.ServiceAccount, name),
 			Namespace:      namespace,
@@ -54,7 +56,7 @@ func UpdateAquaInfrastructureFull(infra *operatorv1alpha1.AquaInfrastructure, na
 			Requirements:   false,
 		}
 	}
-
+	fmt.Sprintf("[UpdateAquaInfrastructureFull] Infrastructure.Version: %v", infra.Version)
 	return infra
 }
 

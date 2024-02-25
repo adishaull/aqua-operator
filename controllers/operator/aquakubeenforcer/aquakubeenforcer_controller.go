@@ -247,6 +247,13 @@ func (r *AquaKubeEnforcerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if instance.Spec.DeployStarboard != nil {
+		log.Info("-------------------------------------------")
+		log.Info("[AquaKubeEnforcerReconciler] Starting newStarboard")
+		log.Info("-------------------------------------------")
+		log.Info(fmt.Sprintf("[AquaKubeEnforcerReconciler] Infrastructure.Version: %v", instance.Spec.Infrastructure.Version))
+		log.Info(fmt.Sprintf("[AquaKubeEnforcerReconciler] KubeEnforcerService.ImageData: %v", instance.Spec.KubeEnforcerService.ImageData))
+		log.Info(fmt.Sprintf("[AquaKubeEnforcerReconciler] cr.Spec.AllowAnyVersion: %v", instance.Spec.AllowAnyVersion))
+
 		r.installAquaStarboard(instance)
 	}
 
@@ -1075,6 +1082,12 @@ func (r *AquaKubeEnforcerReconciler) installAquaStarboard(cr *operatorv1alpha1.A
 
 	// Define a new AquaServer object
 	aquaStarboardHelper := newAquaKubeEnforcerHelper(cr)
+	log.Info("-------------------------------------------")
+	log.Info("[installAquaStarboard] Starting newStarboard")
+	log.Info("-------------------------------------------")
+	log.Info(fmt.Sprintf("[installAquaStarboard] Infrastructure.Version: %v", cr.Spec.Infrastructure.Version))
+	log.Info(fmt.Sprintf("[installAquaStarboard] KubeEnforcerService.ImageData: %v", cr.Spec.KubeEnforcerService.ImageData))
+	log.Info(fmt.Sprintf("[installAquaStarboard] cr.Spec.AllowAnyVersion: %v", cr.Spec.AllowAnyVersion))
 
 	aquasb := aquaStarboardHelper.newStarboard(cr)
 
