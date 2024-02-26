@@ -33,6 +33,9 @@ func newAquaLightningHelper(cr *v1alpha1.AquaLightning) *AquaLightningHelper {
 }
 
 func (lightning *AquaLightningHelper) newAquaKubeEnforcer(cr *v1alpha1.AquaLightning) *v1alpha1.AquaKubeEnforcer {
+	reqLogger := log.WithValues("Lightning - AquaKubeEnforcers Phase", "New KubeEnforcer")
+	reqLogger.Info("Start newAquaKubeEnforcer")
+
 	registry := consts.Registry
 	if cr.Spec.KubeEnforcer.RegistryData != nil {
 		if len(cr.Spec.KubeEnforcer.RegistryData.URL) > 0 {
@@ -85,6 +88,7 @@ func (lightning *AquaLightningHelper) newAquaKubeEnforcer(cr *v1alpha1.AquaLight
 				Registry:   "docker.io/aquasec",
 				Repository: "starboard-operator",
 				PullPolicy: "IfNotPresent",
+				Tag:        consts.StarboardVersion,
 			},
 			Resources: sbResources,
 		},
@@ -117,6 +121,7 @@ func (lightning *AquaLightningHelper) newAquaKubeEnforcer(cr *v1alpha1.AquaLight
 			},
 
 			KubeEnforcerService: &v1alpha1.AquaService{
+				Replicas:  1,
 				Resources: resources,
 			},
 
@@ -128,6 +133,9 @@ func (lightning *AquaLightningHelper) newAquaKubeEnforcer(cr *v1alpha1.AquaLight
 }
 
 func (lightning *AquaLightningHelper) newAquaEnforcer(cr *v1alpha1.AquaLightning) *v1alpha1.AquaEnforcer {
+	reqLogger := log.WithValues("Lightning - AquaEnforcers Phase", "New Enforcer")
+	reqLogger.Info("Start newAquaEnforcer")
+
 	registry := consts.Registry
 	if cr.Spec.Enforcer != nil && cr.Spec.Enforcer.EnforcerService != nil && cr.Spec.Enforcer.EnforcerService.ImageData != nil {
 		if len(cr.Spec.Enforcer.EnforcerService.ImageData.Registry) > 0 {
