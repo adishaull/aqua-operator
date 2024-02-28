@@ -64,6 +64,7 @@ type AquaStarboardReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *AquaStarboardReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	req.NamespacedName.Namespace = extra.GetCurrentNameSpace()
 	reqLogger := log.WithValues("Request.Namespace", req.Namespace, "req.Name", req.Name)
 	reqLogger.Info("Reconciling AquaStarboard")
 
@@ -346,7 +347,7 @@ func (r *AquaStarboardReconciler) addStarboardRole(ro *aquasecurityv1alpha1.Aqua
 
 	// Check if this Role already exists
 	found := &rbacv1.Role{}
-	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: role.Name}, found)
+	err := r.Client.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: ro.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Aqua Starboard: Creating a New Role", "Role.Namespace", role.Namespace, "Role.Name", role.Name)
 		err = r.Client.Create(context.TODO(), role)
