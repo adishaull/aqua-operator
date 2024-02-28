@@ -247,11 +247,8 @@ func (r *AquaKubeEnforcerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	reqLogger.Info("[AquaKubeEnforcer reconciliation] addKEDeployment", "instance.Spec.Infrastructure", sbSpec.Spec.Infrastructure)
 
 	if instance.Spec.DeployStarboard != nil {
-		reqLogger.Info("Continuing with AquaKubeEnforcer DeployStarboard reconciliation", "Instance.Spec", sbSpec.Spec)
-
 		r.installAquaStarboard(sbSpec)
 	}
 
@@ -502,7 +499,6 @@ func (r *AquaKubeEnforcerReconciler) addKEDeployment(cr *operatorv1alpha1.AquaKu
 			} else if !reflect.DeepEqual(operatorv1alpha1.AquaDeploymentStateRunning, currentState) {
 				cr.Status.State = operatorv1alpha1.AquaDeploymentStateRunning
 				_ = r.Client.Status().Update(context.Background(), cr)
-				reqLogger.Info("[AquaKubeEnforcer reconciliation] addKEDeployment in and Afterelse if !reflect.DeepEqual", "instance.Spec.Infrastructure", cr.Spec.Infrastructure)
 			}
 		}
 	}

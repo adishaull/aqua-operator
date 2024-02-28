@@ -972,19 +972,8 @@ func (ebf *AquaKubeEnforcerHelper) getEnvVars(cr *operatorv1alpha1.AquaKubeEnfor
 // Starboard functions
 
 func (ebf *AquaKubeEnforcerHelper) newStarboard(cr *operatorv1alpha1.AquaKubeEnforcer) *v1alpha1.AquaStarboard {
-	_, registry, repository, tag, err := extra.GetImageDataStarbaord("kube-enforcer", cr.Spec.Infrastructure.Version, cr.Spec.KubeEnforcerService.ImageData, cr.Spec.AllowAnyVersion)
-	if err != nil {
-		// Handle the error
-		// For example, you can log the error and return or do other error handling logic
-		log.Error(err, "Failed to get image data for Starboard")
-		// Return or handle the error appropriately
-	}
-	log.Info(fmt.Sprintf("[newStarboard] registry: %s", registry))
-	log.Info(fmt.Sprintf("[newStarboard] repository: %s", repository))
-	log.Info(fmt.Sprintf("[newStarboard] tag: %s", tag))
 
-	//// Log the value of cr to ensure it's not nil
-	//log.Info(fmt.Sprintf("cr: %+v", cr))
+	_, registry, repository, tag := extra.GetImageData("kube-enforcer", cr.Spec.Infrastructure.Version, cr.Spec.KubeEnforcerService.ImageData, cr.Spec.AllowAnyVersion)
 
 	labels := map[string]string{
 		"app":                cr.Name + "-kube-enforcer",
@@ -1026,6 +1015,5 @@ func (ebf *AquaKubeEnforcerHelper) newStarboard(cr *operatorv1alpha1.AquaKubeEnf
 			BatchDeleteDelay:              cr.Spec.DeployStarboard.BatchDeleteDelay,
 		},
 	}
-	log.Info("Successfully created newStarboard")
 	return aquasb
 }

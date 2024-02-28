@@ -117,9 +117,6 @@ func (r *AquaLightningReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 */
 
 func (r *AquaLightningReconciler) updateLightningObject(cr *v1alpha1.AquaLightning) *v1alpha1.AquaLightning {
-	reqLogger := log.WithValues("Lightning - updateLightningObject Phase", "Start updateLightningObject")
-	reqLogger.Info("Start updateLightningObject")
-
 	version := cr.Spec.Enforcer.Infrastructure.Version
 	if len(version) == 0 {
 		version = consts.LatestVersion
@@ -156,7 +153,6 @@ func (r *AquaLightningReconciler) updateLightningObject(cr *v1alpha1.AquaLightni
 		log.Info(fmt.Sprintf("%s secret found, enabling mtls", consts.MtlsAquaKubeEnforcerSecretName))
 		cr.Spec.KubeEnforcer.Mtls = true
 	}
-	reqLogger.Info("Done updateLightningObject")
 	return cr
 }
 
@@ -192,29 +188,14 @@ func (r *AquaLightningReconciler) InstallAquaKubeEnforcer(cr *v1alpha1.AquaLight
 	if found != nil {
 		update := !reflect.DeepEqual(kubeEnforcer.Spec, found.Spec)
 
-		// Log the comparison result and the specs being compared
-		reqLogger.Info("Checking for AquaKubeEnforcer Upgrade",
-			"kube-enforcer", kubeEnforcer.Spec,
-			"found", found.Spec,
-			"update bool", update)
-
+		reqLogger.Info("Checking for AquaKubeEnforcer Upgrade", "kube-enforcer", kubeEnforcer.Spec, "found", found.Spec, "update bool", update)
 		if update {
-			reqLogger.Info("Updating AquaKubeEnforcer")
-
-			// Log the current and updated specs before updating
-			reqLogger.Info("Current Spec:", "found", found.Spec)
-			reqLogger.Info("New Spec:", "kube-enforcer", kubeEnforcer.Spec)
-
 			found.Spec = *(kubeEnforcer.Spec.DeepCopy())
 			err = r.Client.Update(context.Background(), found)
 			if err != nil {
-				reqLogger.Error(err, "Aqua Lightning: Failed to update AquaKubeEnforcer.",
-					"Deployment.Namespace", found.Namespace,
-					"Deployment.Name", found.Name)
+				reqLogger.Error(err, "Aqua CSP: Failed to update AquaKubeEnforcer.", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
 				return reconcile.Result{}, err
 			}
-
-			reqLogger.Info("AquaKubeEnforcer updated successfully.")
 			// Spec updated - return and requeue
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -313,7 +294,6 @@ func (r *AquaLightningReconciler) WaitForEnforcersReady(cr *v1alpha1.AquaLightni
 		returnStatus = v1alpha1.AquaEnforcerUpdatePendingApproval
 	}
 
-	reqLogger.Info("Done waiting to aqua enforcer and kube-enforcer")
 	return returnStatus
 }
 
@@ -332,9 +312,6 @@ func GetKECerts() *KubeEnforcerCertificates {
 }
 
 func createKECerts() (*KubeEnforcerCertificates, error) {
-	reqLogger := log.WithValues("Lightning - AquaKubeEnforcers Phase", "Start to create certificates")
-	reqLogger.Info("Creating kube-enforcer certificates")
-
 	certs := &KubeEnforcerCertificates{}
 	// set up our CA certificate
 	ca := &x509.Certificate{
@@ -437,8 +414,6 @@ func createKECerts() (*KubeEnforcerCertificates, error) {
 		ServerKey:  certPrivKeyPEM.Bytes(),
 		ServerCert: certPEM.Bytes(),
 	}
-
-	reqLogger.Info("Done creating kube-enforcer certificates")
 	return certs, nil
 }
 
